@@ -1305,6 +1305,10 @@ body {
   align-items: center;
   justify-content: center;
 }
+.document-wrapper.blurred .document-image {
+  filter: blur(10px) saturate(110%);
+  transition: filter 160ms ease;
+}
 /* Subtle grid overlay, only shown on correct answers */
 .document-wrapper .grid-overlay {
   position: absolute;
@@ -1562,7 +1566,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 50vh;
+  height: 66vh; /* two-thirds background coverage */
   pointer-events: none;
   z-index: 0; /* under content, above html bg */
   overflow: hidden;
@@ -1576,6 +1580,35 @@ body {
   opacity: 1;
 }
 
+/* Soft side bevels for aurora layer to visually round edges */
+.aurora-global::before,
+.aurora-global::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 260px;
+  pointer-events: none;
+}
+.aurora-global::before {
+  left: -80px;
+  background: radial-gradient(
+    300px 80% at left center,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.55) 28%,
+    rgba(255, 255, 255, 0) 70%
+  );
+}
+.aurora-global::after {
+  right: -80px;
+  background: radial-gradient(
+    300px 80% at right center,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.55) 28%,
+    rgba(255, 255, 255, 0) 70%
+  );
+}
+
 /* During countdown: hide section overlay and aurora; keep clean white */
 /* Hide overlays during pure countdown only; allow during transition */
 body:has(.countdown-screen:not(.transitioning)) #section-game::before {
@@ -1584,70 +1617,96 @@ body:has(.countdown-screen:not(.transitioning)) #section-game::before {
 body:has(.countdown-screen:not(.transitioning)) .aurora-global {
   display: none !important;
 }
+/* More dynamic aurora blobs */
 .aurora__item {
   position: absolute;
-  width: 60vw;
-  height: 60vw;
+  width: 52vw;
+  height: 52vw;
   background: radial-gradient(
     circle,
-    rgba(139, 92, 246, 0.22) 0%,
+    rgba(139, 92, 246, 0.24) 0%,
     transparent 70%
   );
   border-radius: 50%;
-  filter: blur(48px);
-  opacity: 0.7;
-  animation: moveAurora 12s infinite alternate ease-in-out;
+  filter: blur(56px);
+  opacity: 0.65;
+  mix-blend-mode: screen;
+  will-change: transform, opacity, filter;
 }
 .aurora__item:nth-child(1) {
-  bottom: -10%;
-  left: 10%;
-  animation-delay: 0s;
+  bottom: -12%;
+  left: 8%;
+  animation: auroraFloatA 14s ease-in-out infinite alternate,
+    auroraPulse 7.5s ease-in-out infinite;
 }
 .aurora__item:nth-child(2) {
   bottom: 10%;
-  left: 35%;
-  animation-delay: 1.2s;
+  left: 34%;
+  animation: auroraFloatB 16s ease-in-out infinite alternate,
+    auroraPulse 8s ease-in-out infinite;
 }
 .aurora__item:nth-child(3) {
-  bottom: 0%;
+  bottom: 2%;
   left: 62%;
-  animation-delay: 2.4s;
+  animation: auroraFloatC 18s ease-in-out infinite alternate,
+    auroraPulse 9s ease-in-out infinite;
 }
 .aurora__item:nth-child(4) {
-  bottom: 18%;
-  left: 20%;
-  animation-delay: 3.6s;
+  bottom: 24%;
+  left: 18%;
+  width: 44vw;
+  height: 44vw;
+  animation: auroraFloatB 15s ease-in-out infinite alternate-reverse,
+    auroraPulse 7s ease-in-out infinite;
 }
 .aurora__item:nth-child(5) {
-  bottom: 6%;
+  bottom: 8%;
   left: 78%;
-  animation-delay: 4.8s;
+  width: 40vw;
+  height: 40vw;
+  animation: auroraFloatA 17s ease-in-out infinite alternate-reverse,
+    auroraPulse 8.5s ease-in-out infinite;
 }
-@keyframes moveAurora {
+
+@keyframes auroraFloatA {
   0% {
-    transform: translateY(0) translateX(0);
+    transform: translate3d(0, 0, 0) scale(0.94) rotate(0deg);
   }
   100% {
-    transform: translateY(-24px) translateX(22px);
+    transform: translate3d(22px, -28px, 0) scale(1.06) rotate(6deg);
   }
 }
-.screen.game-screen::before {
-  left: 24px;
-  bottom: 28px;
-  width: clamp(320px, 48vw, 720px);
-  height: 34px;
-  background: rgba(139, 92, 246, 0.3);
-  border-radius: 999px;
-  filter: blur(26px);
+@keyframes auroraFloatB {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.96) rotate(0deg);
+  }
+  100% {
+    transform: translate3d(-26px, -18px, 0) scale(1.05) rotate(-5deg);
+  }
 }
+@keyframes auroraFloatC {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.93) rotate(0deg);
+  }
+  100% {
+    transform: translate3d(18px, -34px, 0) scale(1.08) rotate(8deg);
+  }
+}
+@keyframes auroraPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    filter: blur(60px);
+  }
+  50% {
+    opacity: 0.85;
+    filter: blur(44px);
+  }
+}
+/* Remove extra decorative half/half glows to avoid double split */
+.screen.game-screen::before,
 .screen.game-screen::after {
-  right: 32px;
-  top: 34%;
-  width: clamp(300px, 44vw, 560px);
-  height: 30px;
-  background: rgba(168, 85, 247, 0.22);
-  border-radius: 999px;
-  filter: blur(22px);
+  content: none !important;
 }
 
 /* Simplify feedback header colors (only slight purple/green) */
@@ -1678,7 +1737,8 @@ body:has(.countdown-screen:not(.transitioning)) .aurora-global {
   align-content: start;
   width: min(1400px, 96vw);
   min-height: calc(100vh - 80px);
-  margin: 24px auto 32px;
+  /* anchor grid to the left instead of centered */
+  margin: 24px 0 32px clamp(16px, 3vw, 48px);
   padding: 8px 0 24px;
   row-gap: 18px;
 }
@@ -1795,7 +1855,7 @@ body:has(.countdown-screen:not(.transitioning)) .aurora-global {
 /* Circular action buttons like mock */
 .action-row {
   display: flex;
-  gap: 28px;
+  gap: 18px;
   justify-content: center;
   align-items: center;
   margin-top: 0;
@@ -1807,31 +1867,33 @@ body:has(.countdown-screen:not(.transitioning)) .aurora-global {
 }
 .arrow-button.circle {
   display: inline-flex;
-  flex-direction: column;
+  flex-direction: column; /* icon above label */
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 80px; /* match demo h-20 w-20 */
-  height: 80px; /* match demo h-20 w-20 */
-  border-radius: 999px;
+  width: 100px; /* resized per request */
+  height: 100px; /* resized per request */
+  padding: 0;
+  border-radius: 9999px; /* perfect circle */
   border: none;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
   font-weight: 700; /* stronger for visibility */
   backdrop-filter: saturate(120%);
+  position: relative;
 }
 .arrow-button.circle .symbol {
-  font-size: 24px; /* slightly larger like demo */
+  font-size: 28px; /* scale with new size */
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 .arrow-button.circle .label {
-  font-size: 14px; /* demo text-sm */
+  font-size: 16px; /* scale with new size */
   text-transform: lowercase;
-  display: block;
-  font-weight: 500; /* demo font-medium */
+  display: inline-block;
+  font-weight: 700;
   color: inherit;
 }
 .arrow-button.circle:hover {
@@ -1846,7 +1908,7 @@ body:has(.countdown-screen:not(.transitioning)) .aurora-global {
   box-shadow: 0 10px 24px rgba(239, 68, 68, 0.22);
 }
 .arrow-button.circle.success {
-  background: #10b981; /* match learning card green */
+  background: #10b981; /* green */
   color: #fff;
   border-radius: 9999px;
   border: 1px solid rgba(16, 185, 129, 0.15);
@@ -1867,8 +1929,23 @@ body:has(.countdown-screen:not(.transitioning)) .aurora-global {
 }
 .action-row .arrow-button.circle .symbol,
 .action-row .arrow-button.circle .label {
-  color: inherit;
+  color: #ffffff !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); /* improve contrast */
+}
+
+/* Ensure inner SVG icons are white for readability on colored buttons */
+.arrow-button.circle svg {
+  color: #ffffff;
+}
+
+/* Ensure generated background sits behind content */
+.arrow-button::before {
+  z-index: 0;
+}
+.arrow-button.circle .label,
+.arrow-button.circle .symbol {
+  position: relative;
+  z-index: 2;
 }
 
 /***** Right: copy + learning card *****/
@@ -1924,9 +2001,10 @@ body:has(.countdown-screen:not(.transitioning)) .aurora-global {
 #copy-hero,
 .copy-hero {
   align-self: start;
-  max-width: 100%;
+  max-width: 760px;
   width: 100%;
   text-align: left;
+  margin-left: clamp(16px, 3vw, 48px); /* line up with grid left edge */
 }
 .hero-title {
   font-size: clamp(34px, 5.9vw, 62px); /* slightly wider appearance */
@@ -1966,15 +2044,316 @@ body:has(.countdown-screen:not(.transitioning)) .aurora-global {
   text-decoration-color: #ef4444; /* red underline */
 }
 
-/* Learning card area with soft purple surface */
-.learning-card {
+/* Position queue card (replaces learning card) */
+.position-queue-wrapper {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  min-height: clamp(180px, 28vh, 340px);
-  background: linear-gradient(135deg, #f7f7ff, #efeefe);
-  padding: 22px;
-  border-radius: 22px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 18px 30px rgba(24, 18, 53, 0.08);
+  max-width: 520px;
+  margin-top: 25%; /* adjust this value */
+  margin-left: clamp(16px, 3vw, 48px); /* align left edge with hero */
+}
+.position-queue-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  color: #0f172a;
+}
+.position-queue-card .pq-rank {
+  margin: 0;
+  font-size: 15px;
+  color: #6b7280;
+  text-align: left;
+}
+.position-queue-card .pq-strong {
+  color: #111827;
+  font-weight: 800;
+}
+.position-queue-card .pq-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.position-queue-card .pq-progress {
+  width: 100%;
+  height: 16px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  margin: 10px 0 12px 0;
+  overflow: hidden;
+}
+.position-queue-card .pq-delta {
+  color: #7c3aed;
+  font-weight: 800;
+  font-size: 14px;
+  animation: deltaPop 600ms ease;
+}
+.position-queue-wrapper.pulse .position-queue-card {
+  box-shadow: 0 0 0 0 rgba(130, 104, 255, 0.24);
+  animation: queuePulse 600ms ease-out;
+}
+@keyframes queuePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(130, 104, 255, 0);
+  }
+  40% {
+    box-shadow: 0 0 0 16px rgba(130, 104, 255, 0.18);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(130, 104, 255, 0);
+  }
+}
+
+/* Correct toast over the image */
+.correct-toast {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #111827;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  animation: toastPop 280ms ease-out;
+  z-index: 5;
+}
+.correct-toast .ct-emoji {
+  font-size: 18px;
+}
+.correct-toast .ct-text {
+  font-size: 14px;
+}
+.correct-toast .ct-plus {
+  color: #7c3aed;
+  font-weight: 800;
+}
+@keyframes toastPop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-8px) scale(1);
+  }
+}
+.position-queue-card .pq-progress-fill {
+  height: 100%;
+  background: #8b5cf6;
+  border-radius: inherit;
+  transition: width 280ms ease;
+}
+.position-queue-card .pq-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6d28d9;
+  margin-top: 4px;
+}
+.position-queue-card .pq-star {
+  width: 18px;
+  height: 18px;
+}
+.position-queue-card .pq-share {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  color: #6b7280;
+}
+.position-queue-card .pq-share-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.position-queue-card .pq-share-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  background: #f3f4f6;
+  border-radius: 999px;
+}
+.position-queue-card .pq-share-icon img {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+.position-queue-card .pq-share-caption {
+  font-size: 13px;
+}
+
+/* Bottom ticker inside the image card */
+.bottom-ticker {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+}
+.bottom-ticker .ticker-track {
+  white-space: nowrap;
+  color: #4f46e5; /* indigo-600 like the example */
+  font-weight: 600;
+  padding-left: 100%;
+  animation: tickerScroll var(--ticker-duration, 12000ms) linear infinite;
+}
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Lyric-style ticker under position queue */
+.pq-lyric-ticker {
+  margin-top: 3rem; /* increased breathing room below PQ card */
+  padding-top: 6px;
+  font-family: var(--app-font);
+  color: rgba(139, 92, 246, 0.6); /* even more faded purple */
+  font-weight: 700;
+  font-size: clamp(17px, 1.9vh, 20px); /* match hero-sub */
+  line-height: 1.5;
+  white-space: nowrap; /* single line */
+  overflow: visible; /* allow overflow to show outside bounds */
+  text-overflow: clip;
+}
+.pq-lyric-ticker .pq-lyric-line {
+  display: inline-block;
+  animation: lyricFlipIn 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: top center;
+}
+@keyframes lyricFlipIn {
+  0% {
+    opacity: 0;
+    transform: rotateX(-90deg) translateY(-6px);
+  }
+  60% {
+    opacity: 1;
+    transform: rotateX(8deg) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateX(0deg) translateY(0);
+  }
+}
+
+/* Signup modal over image card */
+.signup-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 6;
+  pointer-events: none; /* enable only on children */
+}
+.signup-overlay.visible {
+  pointer-events: none;
+}
+.signup-overlay .signup-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(2px);
+  border-radius: 12px;
+  pointer-events: auto;
+}
+.signup-card {
+  position: relative;
+  width: min(460px, 92%);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+  padding: 22px 20px 20px 20px;
+  text-align: left;
+  pointer-events: auto;
+  animation: signupIn 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.signup-overlay.minimizing .signup-card {
+  animation: signupOut 220ms ease-in forwards;
+}
+.signup-title {
+  margin: 0 0 10px 0;
+  font-size: 26px;
+  font-weight: 800;
+  text-align: center;
+  color: #0f172a;
+}
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.signup-input {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.85);
+  color: #111827;
+  padding: 0 12px;
+  outline: none;
+}
+.signup-submit {
+  height: 44px;
+  border-radius: 10px;
+  background: #6366f1; /* indigo-500 */
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+  cursor: pointer;
+}
+.signup-submit.loading {
+  opacity: 0.7;
+  cursor: default;
+}
+/* Pop jump-like entrance */
+@keyframes signupIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.94);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes signupOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
 }
 .learning-placeholder {
   width: 100%;
@@ -2355,48 +2734,11 @@ body:has(.countdown-screen:not(.transitioning)) .aurora-global {
 }
 
 /* Learning card pop-in animation when becoming visible */
-.learning-card {
-  opacity: 0;
-  transform: translateY(10px) scale(0.96);
-  transition: none;
-  will-change: transform, opacity;
-}
-@keyframes cardPopIn {
-  0% {
-    opacity: 0;
-    transform: translateY(10px) scale(0.96);
-  }
-  60% {
-    opacity: 1;
-    transform: translateY(-3px) scale(1.04);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-.learning-card.visible {
-  opacity: 1;
-  animation: cardPopIn 340ms cubic-bezier(0.2, 0.8, 0.2, 1.1);
-}
-
-@keyframes cardPopOut {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  35% {
-    opacity: 1;
-    transform: translateY(-3px) scale(1.03);
-  } /* overshoot up */
-  100% {
-    opacity: 0;
-    transform: translateY(10px) scale(0.96);
-  }
-}
+/* Disable legacy learning-card animations */
+.learning-card,
+.learning-card.visible,
 .learning-card.pop-out {
-  animation: cardPopOut 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  pointer-events: none;
+  display: none !important;
 }
 
 /* During swipe, fade the current doc to avoid ghosting */
@@ -2954,59 +3296,7 @@ body:has(.countdown-screen:not(.transitioning)) .aurora-global {
   overflow: visible;
 }
 #section-game::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    /* soft highlight around the fold */ radial-gradient(
-      140% 160px at 50% 52vh,
-      rgba(255, 255, 255, 0.95) 0%,
-      rgba(255, 255, 255, 0) 65%
-    ),
-    /* left bevel */
-      radial-gradient(
-        180px 50% at -40px 48vh,
-        rgba(255, 255, 255, 0.85) 0%,
-        rgba(255, 255, 255, 0.6) 30%,
-        rgba(255, 255, 255, 0) 65%
-      ),
-    /* right bevel */
-      radial-gradient(
-        180px 50% at calc(100% + 40px) 48vh,
-        rgba(255, 255, 255, 0.85) 0%,
-        rgba(255, 255, 255, 0.6) 30%,
-        rgba(255, 255, 255, 0) 65%
-      ),
-    /* bottom-left bevel */
-      radial-gradient(
-        320px 200px at -80px 100%,
-        rgba(255, 255, 255, 0.75) 0%,
-        rgba(255, 255, 255, 0.45) 32%,
-        rgba(255, 255, 255, 0) 72%
-      ),
-    /* bottom-right bevel */
-      radial-gradient(
-        320px 200px at calc(100% + 80px) 100%,
-        rgba(255, 255, 255, 0.75) 0%,
-        rgba(255, 255, 255, 0.45) 32%,
-        rgba(255, 255, 255, 0) 72%
-      ),
-    /* top half solid white fading into bottom purple */
-      linear-gradient(
-        to bottom,
-        #ffffff 0%,
-        #ffffff 50vh,
-        rgba(255, 255, 255, 0) 50vh
-      ),
-    /* base: slightly stronger purple at the bottom half */
-      linear-gradient(
-        to bottom,
-        rgba(244, 241, 255, 0) 0%,
-        rgba(139, 92, 246, 0.16) 60vh,
-        rgba(139, 92, 246, 0.2) 100%
-      );
+  content: none !important; /* rely on aurora-global for lower 2/3 background */
 }
 
 /* Remove previous seam workarounds; rely on split overlay above */

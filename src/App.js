@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import "./App.css";
 import { playTickSound } from "./utils/sounds";
 import { documentDataset, userAnalytics } from "./data/documents";
-import EducationalFeedback from "./components/EducationalFeedback";
 import TextGenerateEffect from "./components/ui/TextGenerateEffect";
 import WordFlip from "./components/ui/WordFlip";
 import linkedinIcon from "./components/images/icon/linkedin-white.svg";
@@ -324,6 +323,68 @@ const CountdownScreen = ({ count, isTransitioning }) => {
   );
 };
 
+// Position queue card (replaces learning card)
+const PositionQueue = ({ position, totalPlayers, delta }) => {
+  const progressPct = Math.max(
+    0,
+    Math.min(100, (position / Math.max(1, totalPlayers)) * 100)
+  );
+  return (
+    <div className="position-queue-card" id="position-queue-card">
+      <p className="pq-rank" id="pq-rank">
+        You're <span className="pq-strong">{position}</span>/{totalPlayers}
+      </p>
+      <div className="pq-progress-row" id="pq-progress-row">
+        <div className="pq-progress" id="pq-progress">
+          <div
+            className="pq-progress-fill"
+            id="pq-progress-fill"
+            style={{ width: `${progressPct.toFixed(2)}%` }}
+          />
+        </div>
+        {delta != null && (
+          <div className="pq-delta" id="pq-delta">
+            {delta}
+          </div>
+        )}
+      </div>
+      <div className="pq-meta" id="pq-meta">
+        <svg
+          className="pq-star"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden
+        >
+          <path
+            d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+        </svg>
+        <p>
+          Next cohort unlocks in <span className="pq-strong">5 days</span> for
+          top
+          <span className="pq-strong"> 1000 places</span>
+        </p>
+      </div>
+      <div className="pq-share" id="pq-share">
+        <div className="pq-share-icons">
+          <a href="#" className="pq-share-icon" aria-label="LinkedIn">
+            <img src={linkedinIcon} alt="LinkedIn" />
+          </a>
+          <a href="#" className="pq-share-icon" aria-label="GitHub">
+            <img src={githubIcon} alt="GitHub" />
+          </a>
+        </div>
+        <p className="pq-share-caption">
+          Share to jump <span className="pq-strong">100 places</span>
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const GameScreen = () => {
   const [score, setScore] = useState(0);
   const [guessCount, setGuessCount] = useState(0);
@@ -349,12 +410,76 @@ const GameScreen = () => {
   const thinkingTimerRef = useRef(null);
   const feedbackTimerRef = useRef(null);
 
-  // Leaderboard-style position pill: start mid-pack and move up 50 places per correct
-  const TOTAL_PLAYERS = 1000;
-  const [position, setPosition] = useState(Math.floor(TOTAL_PLAYERS * 0.7));
+  // Position queue: initialize to mid-pack and move up 50 places per correct
+  const TOTAL_PLAYERS = 49747;
+  const [position, setPosition] = useState(23085);
   const [pendingPositionDelta, setPendingPositionDelta] = useState(0);
   const [startPosition, setStartPosition] = useState(null);
   const [deltaShown, setDeltaShown] = useState(null);
+  const [queuePulse, setQueuePulse] = useState(false);
+  const [showCorrectToast, setShowCorrectToast] = useState(false);
+  const [toastTruth, setToastTruth] = useState("fake");
+  // Signup modal state
+  const [showSignup, setShowSignup] = useState(false);
+  const [signupMinimize, setSignupMinimize] = useState(false);
+  const [nextSignupAt, setNextSignupAt] = useState(3);
+  const [emailInput, setEmailInput] = useState("");
+  const [signupSubmitting, setSignupSubmitting] = useState(false);
+
+  // Bottom ticker messages (always visible)
+  const TICKER_MESSAGES = [
+    "🎉 User1213 has just guessed 10 right answers in a row!",
+    "✨ Current record, 127 correct guesses in a row. Can you beat it?",
+  ];
+  const MARQUEE_DURATION_MS = 8000; // faster cycling
+  const [tickerIdx, setTickerIdx] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTickerIdx((i) => (i + 1) % TICKER_MESSAGES.length);
+    }, MARQUEE_DURATION_MS);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Open signup after every 3 guesses
+  useEffect(() => {
+    if (isSliding) return;
+    if (!showSignup && guessCount >= nextSignupAt) {
+      setShowSignup(true);
+      setSignupMinimize(false);
+    }
+  }, [guessCount, nextSignupAt, showSignup, isSliding]);
+
+  const closeSignup = () => {
+    setSignupMinimize(true);
+    setTimeout(() => {
+      setShowSignup(false);
+      setSignupMinimize(false);
+      setSignupSubmitting(false);
+      setEmailInput("");
+      setNextSignupAt(guessCount + 3);
+    }, 260);
+  };
+
+  const handleSignupSubmit = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (signupSubmitting) return;
+    setSignupSubmitting(true);
+    setTimeout(() => {
+      closeSignup();
+    }, 900);
+  };
+
+  // Click-away anywhere to close
+  useEffect(() => {
+    if (!showSignup) return;
+    const onDocClick = (e) => {
+      if (e.target.closest && e.target.closest(".signup-card")) return;
+      closeSignup();
+    };
+    document.addEventListener("click", onDocClick);
+    return () => document.removeEventListener("click", onDocClick);
+  }, [showSignup]);
 
   // Initialize randomized document order - always start with fake
   useEffect(() => {
@@ -544,8 +669,17 @@ const GameScreen = () => {
 
     if (isCorrect) {
       setScore(score + 1);
-      // Defer position update until learning card pop-in finishes
-      setPendingPositionDelta((prev) => prev + 50);
+      // Immediate position update: move up 50 places
+      setPosition((prev) => Math.max(1, prev - 50));
+      setDeltaShown(-50);
+      setTimeout(() => setDeltaShown(null), 900);
+      // pulse the queue card
+      setQueuePulse(true);
+      setTimeout(() => setQueuePulse(false), 600);
+      // show toast over image
+      setToastTruth(currentDoc?.isReal ? "real" : "fake");
+      setShowCorrectToast(true);
+      setTimeout(() => setShowCorrectToast(false), 1200);
 
       // Add confetti effect to button
       const buttonClass = isReal ? ".arrow-button.right" : ".arrow-button.left";
@@ -568,7 +702,7 @@ const GameScreen = () => {
       }
     }
 
-    // After 500ms of feedback, show educational feedback
+    // After 500ms of feedback, continue to the next document
     setTimeout(() => {
       if (primaryWrapper) {
         // Remove feedback classes including glow effects
@@ -583,25 +717,7 @@ const GameScreen = () => {
       if (shadowWrapper) {
         shadowWrapper.classList.remove("slide-left", "slide-right");
       }
-
-      // Show educational feedback and start auto-advance countdown (paused by hover)
-      setShowEducationalFeedback(true);
-      setAutoAdvanceLeft(AUTO_ADVANCE_TIME);
-      // Keep cooldown TRUE during feedback so user cannot guess again
-      // When the learning card pop-in finishes, apply pending position updates
-      const card = document.getElementById("learning-card");
-      if (card) {
-        const onCardIn = () => {
-          if (pendingPositionDelta > 0) {
-            setPosition((prev) => Math.max(1, prev - pendingPositionDelta));
-            setPendingPositionDelta(0);
-            setDeltaShown(-50);
-            setTimeout(() => setDeltaShown(null), 900);
-          }
-        };
-        // Use a small timeout as a proxy for the pop-in animation (~340ms)
-        setTimeout(onCardIn, 360);
-      }
+      handleContinue();
     }, 500);
   };
 
@@ -618,7 +734,7 @@ const GameScreen = () => {
     // Direction based on truth: real -> right, fake -> left
     const directionClass = docIsReal ? "slide-right" : "slide-left";
 
-    // Add slide animation after educational feedback
+    // Add slide animation
     if (primaryWrapper) {
       setIsSliding(true);
       // stop feedback timer immediately
@@ -633,8 +749,7 @@ const GameScreen = () => {
         const pre = new Image();
         pre.src = nextDoc.image;
       }
-      // Keep feedback visible during swipe; also keep cooldown
-      setShowEducationalFeedback(true);
+      // Keep cooldown during swipe
       // Clear any inline transform from tilt so CSS animation can take control
       primaryWrapper.style.transform = "";
       if (shadowWrapper) shadowWrapper.style.transform = "";
@@ -665,21 +780,7 @@ const GameScreen = () => {
         setLastAnswer(null);
         setIsSliding(false);
 
-        // Pop-out the learning card, then hide it
-        const card = document.querySelector(".learning-card");
-        if (card) {
-          card.classList.add("pop-out");
-          card.addEventListener(
-            "animationend",
-            () => {
-              card.classList.remove("pop-out");
-              setShowEducationalFeedback(false);
-            },
-            { once: true }
-          );
-        } else {
-          setShowEducationalFeedback(false);
-        }
+        setShowEducationalFeedback(false);
       };
       primaryWrapper.addEventListener("animationend", onEnd, { once: true });
     }
@@ -760,12 +861,16 @@ const GameScreen = () => {
 
       if (!container || !image || !primaryWrapper || !currentDoc) return;
 
-      // Suppress magnifier while hovering action buttons
+      // Suppress magnifier while hovering action buttons or signup modal
       const target = event.target;
       if (
         target &&
         target.closest &&
-        (target.closest(".action-row") || target.closest(".arrow-button"))
+        (target.closest(".action-row") ||
+          target.closest(".arrow-button") ||
+          target.closest(".signup-card") ||
+          target.closest("#signup-overlay") ||
+          target.closest(".signup-backdrop"))
       ) {
         primaryWrapper.classList.remove("magnifier-active");
         setMagnifierState((prev) => ({ ...prev, visible: false }));
@@ -1001,12 +1106,64 @@ const GameScreen = () => {
               {/* Removed circular timer from image card */}
 
               {/* Optional toast */}
-              {/* Removed on-image toast for a cleaner look */}
+              {showCorrectToast && (
+                <div className="correct-toast" id="correct-toast">
+                  <span className="ct-emoji" aria-hidden>
+                    🎉
+                  </span>
+                  <span className="ct-text">
+                    <strong>Correct!</strong> That was {toastTruth}.{" "}
+                    <span className="ct-plus">+50 places!</span>
+                  </span>
+                </div>
+              )}
+
+              {/* Signup modal */}
+              {showSignup && (
+                <div
+                  className={`signup-overlay ${
+                    signupMinimize ? "minimizing" : "visible"
+                  }`}
+                  id="signup-overlay"
+                >
+                  <div className="signup-backdrop" onClick={closeSignup} />
+                  <div
+                    className="signup-card"
+                    id="signup-card"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <h3 className="signup-title">Join us!</h3>
+                    <form className="signup-form" onSubmit={handleSignupSubmit}>
+                      <label htmlFor="signup-email">Email</label>
+                      <input
+                        id="signup-email"
+                        type="email"
+                        className="signup-input"
+                        placeholder="Email address"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="submit"
+                        className={`signup-submit ${
+                          signupSubmitting ? "loading" : ""
+                        }`}
+                        disabled={signupSubmitting}
+                      >
+                        {signupSubmitting ? "Loading..." : "Get early access"}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom ticker removed from image card – relocated below PQ card */}
 
               <div
                 className={`document-wrapper primary ${
                   showEducationalFeedback ? "" : "slide-in"
-                }`}
+                } ${showSignup ? "blurred" : ""}`}
                 id="document-wrapper"
               >
                 {currentDoc ? (
@@ -1039,8 +1196,8 @@ const GameScreen = () => {
               >
                 <span className="symbol" aria-hidden="true">
                   <svg
-                    width="26"
-                    height="26"
+                    width="28"
+                    height="28"
                     viewBox="0 0 24 24"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -1048,7 +1205,7 @@ const GameScreen = () => {
                     <path
                       d="M6 6l12 12M18 6l-12 12"
                       stroke="currentColor"
-                      strokeWidth="2"
+                      strokeWidth="2.8"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
@@ -1064,8 +1221,8 @@ const GameScreen = () => {
               >
                 <span className="symbol" aria-hidden="true">
                   <svg
-                    width="26"
-                    height="26"
+                    width="28"
+                    height="28"
                     viewBox="0 0 24 24"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -1073,7 +1230,7 @@ const GameScreen = () => {
                     <path
                       d="M5 13l4 4L19 7"
                       stroke="currentColor"
-                      strokeWidth="2"
+                      strokeWidth="2.8"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
@@ -1084,140 +1241,28 @@ const GameScreen = () => {
             </div>
           </div>
 
-          {/* Row 2, Col 2: Learning card (right) */}
+          {/* Row 2, Col 2: Position queue card (right) */}
           <div className="copy-right-panel" id="copy-right-panel">
-            <div className="learning-column" id="learning-column">
-              <div
-                className={`learning-card ${
-                  showEducationalFeedback ? "visible" : ""
-                }`}
-                id="learning-card"
-              >
-                {/* Circular timer replaced by opposite-direction bar in time-remaining */}
-                <div className="learning-content" id="learning-content">
-                  {showEducationalFeedback && lastAnswer ? (
-                    <>
-                      <div
-                        className={`feedback-header ${
-                          lastAnswer.document.isReal ? "correct" : "incorrect"
-                        }`}
-                        id="feedback-header"
-                      >
-                        <h3>{lastAnswer.document.isReal ? "REAL" : "FAKE"}</h3>
-                      </div>
-
-                      <div className="feedback-body" id="feedback-body">
-                        <div className="document-info" id="document-info">
-                          <h4>{lastAnswer.document.type}</h4>
-                          <p className="document-description">
-                            {lastAnswer.document.description}
-                          </p>
-                        </div>
-
-                        <div className="edu-simple" id="edu-simple">
-                          <h5>Learning opportunity</h5>
-                          <p className="edu-merged">
-                            {!lastAnswer.isCorrect
-                              ? `${lastAnswer.document.educationalNotes.whenWrong} ${lastAnswer.document.educationalNotes.keyIndicators}`
-                              : lastAnswer.document.educationalNotes
-                                  .keyIndicators}
-                          </p>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="learning-placeholder" />
-                  )}
+            <div
+              className={`position-queue-wrapper ${queuePulse ? "pulse" : ""}`}
+              id="position-queue-wrapper"
+            >
+              <PositionQueue
+                position={position}
+                totalPlayers={TOTAL_PLAYERS}
+                delta={deltaShown}
+              />
+              {/* Vertical lyric-style ticker under PQ card */}
+              <div className="pq-lyric-ticker" aria-live="polite">
+                <div
+                  key={tickerIdx}
+                  className="pq-lyric-line"
+                  style={{ "--lyric-duration": `${MARQUEE_DURATION_MS}ms` }}
+                >
+                  {TICKER_MESSAGES[tickerIdx]}
                 </div>
               </div>
-              {showEducationalFeedback && guessCount >= 2 && (
-                <div className="learning-footnote" id="learning-footnote">
-                  <TextGenerateEffect
-                    words={
-                      "Insurers lose £100bn+ per year to fraud. Veridox flags forged docs in seconds, before they cost you."
-                    }
-                    className="learning-footnote-text"
-                    id="learning-footnote-text"
-                    delayStep={0.04}
-                    duration={0.45}
-                  />
-                </div>
-              )}
             </div>
-
-            {/* Vertical position pill */}
-            {showEducationalFeedback && (
-              <div className="position-pill" id="position-pill">
-                <div className="pill-inner" id="pill-inner">
-                  <div className="pill-header" id="pill-header">
-                    <div className="pill-title" id="pill-title">
-                      position
-                    </div>
-                    <div className="pill-value" id="pill-value">
-                      {position}
-                    </div>
-                  </div>
-                  {deltaShown != null && (
-                    <div className="pill-delta" id="pill-delta">
-                      {deltaShown}
-                    </div>
-                  )}
-                  <div className="pill-track" id="pill-track">
-                    <div
-                      className="pill-fill"
-                      id="pill-fill"
-                      style={{
-                        height: `${(() => {
-                          const baseline = startPosition ?? TOTAL_PLAYERS;
-                          const advanced = Math.max(0, baseline - position);
-                          const denom = Math.max(1, baseline - 1);
-                          const pct = (advanced / denom) * 100;
-                          return Math.max(0, Math.min(100, pct)).toFixed(2);
-                        })()}%`,
-                      }}
-                    />
-                  </div>
-                  <div className="pill-actions" id="pill-actions">
-                    <a
-                      href="#"
-                      className="pill-icon"
-                      id="pill-ln"
-                      title="Share on LinkedIn"
-                      aria-label="LinkedIn"
-                    >
-                      <img src={linkedinIcon} alt="LinkedIn" />
-                    </a>
-                    <a
-                      href="#"
-                      className="pill-icon"
-                      id="pill-gh"
-                      title="Share on GitHub"
-                      aria-label="GitHub"
-                    >
-                      <img src={githubIcon} alt="GitHub" />
-                    </a>
-                    <a
-                      href="#"
-                      className="pill-icon"
-                      id="pill-mail"
-                      title="Share via Email"
-                      aria-label="Email"
-                    >
-                      <img src={gmailIcon} alt="Email" />
-                    </a>
-                    <a
-                      href="#"
-                      className="pill-icon"
-                      id="pill-live"
-                      title="Share link"
-                      aria-label="Share link"
-                    >
-                      <img src={liveLinkIcon} alt="Link" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
