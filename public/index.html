@@ -1,14 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="./avatar.png" />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    
-    <title>Personal Website Template</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Veridox Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      /* Global seamless background on the root element */
+      html {
+        background: radial-gradient(
+            1100px 720px at 12% 88%,
+            rgba(139, 92, 246, 0.28),
+            transparent 62%
+          ),
+          radial-gradient(
+            900px 600px at 84% 22%,
+            rgba(168, 85, 247, 0.24),
+            transparent 62%
+          ),
+          linear-gradient(180deg, #f4f1ff 0%, #ffffff 100%);
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+      body {
+        background: transparent;
+      }
+    </style>
   </head>
   <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
   </body>
 </html>
