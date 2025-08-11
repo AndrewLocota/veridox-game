@@ -1,5 +1,10 @@
 // Create and cache audio elements
-const tickSound = new Audio("/sounds/tick.mp3");
+const tickSound = new Audio(
+  (typeof process !== "undefined" && process.env && process.env.PUBLIC_URL
+    ? process.env.PUBLIC_URL
+    : "") + 
+    "/sounds/tick.mp3"
+);
 tickSound.volume = 0.5; // Set volume to 50%
 
 export const playTickSound = () => {
