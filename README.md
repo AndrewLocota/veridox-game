@@ -1,169 +1,152 @@
-# Personal Website Template
+# Veridox — Spot the Fake (Document Forensics Game)
 
-Welcome to the Personal Website Template! This web app is designed to help you create a personalized website easily. It's particularly useful for computer science students, freshers, software professionals, data professionals, and anyone else looking to showcase their work and profile. The template is built using React.js, HTML, CSS, and JavaScript.
+Train your eye to detect forged and AI‑generated documents in seconds. Veridox is a fast, educational browser game and demo built to showcase our platform’s real‑world document forensics capabilities for insurers, KYC/AML, trust & safety, and risk teams.
 
-![Personal Website Screenshot](./src/components/images/personal_website_template_ss.png)
+The experience simulates real review: magnify details, decide “real” or “fake,” then learn what to look for. Each correct answer moves you up a live wait‑list style position indicator.
+
+![Veridox](public/images/veridox-logo.png)
 
 ## Table of Contents
-1. [Key Features](#key-features)
-2. [Technologies Used](#technologies-used)
-3. [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-    - [Running the Project](#running-the-project)
-4. [Personalizing the Project](#personalizing-the-project)
-    - [Changes in the `./public` Folder](#changes-in-the-public-folder)
-    - [Changes in the `./src` Folder](#changes-in-the-src-folder)
-5. [Hosting on GitHub](#hosting-on-github)
-6. [Helpful Websites](#helpful-websites)
-7. [Contributing](#contributing)
-8. [License](#license)
-9. [Contact](#contact)
+1. [What is Veridox?](#what-is-veridox)
+2. [Features](#features)
+3. [How it works](#how-it-works)
+4. [Quick start](#quick-start)
+5. [Project structure](#project-structure)
+6. [Managing the dataset](#managing-the-dataset)
+7. [Configuration](#configuration)
+8. [Deployment](#deployment)
+9. [Tech stack](#tech-stack)
+10. [Roadmap](#roadmap)
+11. [License](#license)
 
-## Key Features
+## What is Veridox?
+Veridox helps teams spot forged or AI‑generated documents before they become expensive claims or onboarding failures. This game demonstrates core UX and education elements: rapid decisioning under time pressure, visual inspection aids, and targeted feedback that teaches the difference between real and fake artifacts.
 
-- **Customizable Home Section**: Personalize your name, introduction, and animation.
-- **Skills Showcase**: Display your skills with customizable icons and animations.
-- **Education and Experience**: List your educational background and professional experience.
-- **Projects Section**: Highlight your projects with screenshots and links.
-- **Contact Form**: Simple contact form with Formspree integration.
-- **Responsive Design**: Optimized for desktop and mobile devices.
+> Production Veridox adds automated forgery detection, policy controls, review workflows, and auditability. This repo focuses on the interactive training/demo experience.
 
-## Technologies Used
+## Features
 
-- **React.js**: For building the user interface.
-- **HTML**: For the structure of the web pages.
-- **CSS**: For styling the application.
-- **JavaScript**: For interactivity and functionality.
-- **Node.js**: Required to run the development server for the frontend application.
+- **Countdown challenge**: 10‑second timer to encourage quick, confident review.
+- **Magnifier with crosshair**: Inspect micro‑details anywhere on the page.
+- **Swipe/keys/buttons**: Left = fake, right = real; supports arrow keys and click.
+- **Educational feedback**: After each guess, see why it’s real or fake and what to check next time.
+- **Auto‑advance with hover‑pause**: Review notes without losing pace.
+- **Position pill**: Correct answers move you up a live “wait‑list” indicator.
+- **Analytics hooks**: Wrong answers are logged by category, difficulty, and type for learning insights.
+- **Pluggable dataset**: Add your own real and fake documents with metadata, difficulty, and learning notes.
 
-## Getting Started
+## How it works
+
+- The app renders a randomized stream of documents from `src/data/documents.js` that reference images in `public/dataset/real` and `public/dataset/fake`.
+- Users decide “real” or “fake” via swipe, arrow keys, or UI buttons.
+- A learning card explains the decision with highlights like forgery techniques and security features.
+- The timer and position pill reinforce fast, accurate decision‑making.
+
+## Quick start
 
 ### Prerequisites
+- Node.js 16+ (18+ recommended)
+- npm 8+
 
-- Node.js (v12.x or later)
+### Install & run
+```bash
+npm install
+npm start
+```
+Then open `http://localhost:3000`.
 
-### Installation
+## Project structure
 
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/NJITCDS/Personal-Website-Template.git
-    ```
-2. Navigate to the project directory:
-    ```bash
-    cd Personal-Website-Template
-    ```
-3. Install the dependencies:
-    ```bash
-    npm install
-    ```
+```
+public/
+  images/veridox-logo.png
+  dataset/
+    real/   # authentic examples
+    fake/   # forged/AI examples
+    SETUP_GUIDE.md
+src/
+  App.js                   # game flow, countdown, magnifier, feedback
+  data/documents.js        # dataset + metadata + analytics hooks
+  components/EducationalFeedback.js
+  utils/sounds.js          # tick sound for countdown
+```
 
-### Running the Project
+## Managing the dataset
 
-1. Start the application:
-    ```bash
-    npm start
-    ```
-2. Open your browser and navigate to `http://localhost:3000`.
+Add images and metadata to create your own exercises.
 
-## Personalizing the Project
+1) Place images:
+- Real docs → `public/dataset/real/`
+- Fake docs → `public/dataset/fake/`
 
-### Changes in the `./public` Folder
+2) Describe each document in `src/data/documents.js`:
 
-- **Website Icon and Title** (`./public/index.html`)
-    - Change the profile photo or logo by replacing `avatar.png` in the `./public` folder and update the reference in line 6 of `index.html`.
-    - Update the website title in `index.html` at line 9.
+```js
+{
+  id: 12,
+  image: process.env.PUBLIC_URL + "/dataset/fake/your_image.png",
+  isReal: false,
+  type: "AI‑Generated Invoice",
+  category: "invoice",
+  difficulty: "hard", // easy | medium | hard | expert
+  forgeryType: "ai_generation",
+  forgeryDetails: {
+    alterations: ["Synthetic data"],
+    techniques: ["Diffusion model"],
+    detectionClues: ["Inconsistent typography"]
+  },
+  educationalNotes: {
+    whenWrong: "This is actually FAKE! Look for…",
+    keyIndicators: "Subtle kerning, unrealistic tax IDs, generic branding"
+  }
+}
+```
 
-### Changes in the `./src` Folder
+For a step‑by‑step guide (categories, difficulty levels, and image requirements), see the dataset guide: [`public/dataset/SETUP_GUIDE.md`](public/dataset/SETUP_GUIDE.md).
 
-- **Home Section Name and Introduction** (`./src/App.js`)
-    - Update your name at line 31 and introduction at line 34 in `App.js`.
+## Configuration
 
-- **Home Section Animation** (`./src/App.js`)
-    - Find and customize an animation from [LottieFiles](https://lottiefiles.com/) and save the `.json` file in `./src/components/animations`. Reference the file at line 42 in `App.js`.
+Key configuration lives in `src/data/documents.js`:
 
-- **Home Section Connection Links** (`./src/components/Connect.js`)
-    - Update your LinkedIn, GitHub, and resume links in `Connect.js`.
+- `documentDataset`: Array of document items consumed by the game.
+- `userAnalytics`: In‑memory logging of wrong answers, aggregated by category/difficulty/type.
+- `datasetConfig`: Allowed formats, recommended dimensions, and validation helper.
 
-- **Nav Bar Profile Image/Logo** (`./src/components/Navbar.js`)
-    - Replace `avatar.png` in the `./src/components/images` folder and update the reference at line 17 in `Navbar.js`.
+UI/UX behaviors are defined in `src/App.js` (e.g., timer length, auto‑advance, magnifier behavior, animations).
 
-- **Skills Section** (`./src/components/Skills.js`)
-    - Edit the `skillsSection` constant at line 8 in `Skills.js` to update your skills and their icons.
+## Deployment
 
-- **Education and Experience** (`./src/components/Education.js`, `./src/components/Experience.js`)
-    - Update your education details in the `education` constant at line 3 in `Education.js`.
-    - Update your experience details in the `experience` constant at line 3 in `Experience.js`.
+This app is built with Create React App and can be deployed anywhere static assets can be served.
 
-- **Projects** (`./src/components/Projects.js`)
-    - Add your projects to the `projects` constant in `Projects.js`.
-    - **Recommended Image Ratio**: For best results, use images with a 16:9 ratio for project screenshots.
+### GitHub Pages
+1. In `package.json`, set `homepage` to your repo pages URL, for example:
+   ```json
+   "homepage": "https://your-username.github.io/your-repo"
+   ```
+2. Build and deploy:
+   ```bash
+   npm run deploy
+   ```
+3. In GitHub → Settings → Pages, ensure the source is the `gh-pages` branch.
 
-- **Contact Section** (`./src/components/Contact.js`)
-    - Update your email, Formspree endpoint, and Google Maps iframe code in `Contact.js`.
+## Tech stack
 
-## Hosting on GitHub
+- React 18
+- React Scripts (CRA)
+- Framer Motion (animations)
+- Lightweight custom components for text effects and UI polish
 
-1. Add homepage to `package.json`:
-    ```json
-    "homepage": "https://myusername.github.io/my-app",
-    ```
-    Replace `myusername` with your GitHub username and `my-app` with your repository name.
+## Roadmap
 
-2. Install `gh-pages`:
-    ```bash
-    npm install --save gh-pages
-    ```
-
-3. Deploy the site:
-    ```bash
-    npm run deploy
-    ```
-
-4. Configure GitHub Pages:
-    - Go to your repository settings on GitHub.
-    - Select `Pages` from the menu.
-    - Ensure the branch is set to `gh-pages`.
-
-## Helpful Websites
-
-- **[LottieFiles](https://lottiefiles.com/)**: Customize and download animations.
-- **[SVGRepo](https://www.svgrepo.com/)**: Source for SVG icons.
-- **[ChatGPT](https://chatgpt.com/)**: AI tool for explanations, debugging, and content enhancement.
-- **[CodePen](https://codepen.io/)**: Experiment with HTML, CSS, and JS elements.
-- **[CodeSandbox](https://codesandbox.io/)**: Create and run React apps.
-- **[Formspree](https://formspree.io/)**: Handle form submissions and get email notifications.
-- **[Crop Circle](https://crop-circle.imageonline.co/#circlecropresult)**: Crop images into circles.
-
-## Contributing
-
-Contributions are welcome! Please follow these steps to contribute:
-
-1. Fork the repository.
-2. Create your feature branch:
-    ```bash
-    git checkout -b feature/AmazingFeature
-    ```
-3. Commit your changes:
-    ```bash
-    git commit -m 'Add some AmazingFeature'
-    ```
-4. Push to the branch:
-    ```bash
-    git push origin feature/AmazingFeature
-    ```
-5. Open a pull request.
+- Optional cloud analytics & cohorts for learning outcomes
+- Document region highlighting and side‑by‑side comparisons
+- Role‑based scenarios (claims, KYC, marketplace)
+- Integrated model‑assisted hints and explainability
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-For inquiries regarding this project, please contact:
-
-- GitHub: [Koustubh Sahu](https://github.com/KoustubhSahu)
+This project is licensed under the MIT License. See [`LICENSE`](LICENSE).
 
 ---
 
-Thank you for using the Personal Website Template! We hope it helps you create a stunning personal website.
+If you’d like to integrate this training experience into your workflow or see the full Veridox platform in action, use the “Book a demo” button in the header or get in touch.
