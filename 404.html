@@ -43,18 +43,17 @@
     <script>
       // GitHub Pages SPA redirect handling
       (function () {
-        var redirect = sessionStorage.getItem('gh_pages_redirect');
+        var redirect = sessionStorage.getItem("gh_pages_redirect");
         if (redirect) {
-          sessionStorage.removeItem('gh_pages_redirect');
+          sessionStorage.removeItem("gh_pages_redirect");
           var location = JSON.parse(redirect);
           if (location && location.path) {
-            var url = location.path + (location.search || '') + (location.hash || '');
+            var url =
+              location.path + (location.search || "") + (location.hash || "");
             history.replaceState(null, null, url);
           }
         }
       })();
     </script>
   </body>
-  </html>
-
-
+</html>
