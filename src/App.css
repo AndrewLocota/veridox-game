@@ -8,6 +8,8 @@
 /* Global app font based on hero title stack */
 :root {
   --app-font: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --image-card-y-nudge: -9vh; /* Relative upward nudge; adjust as needed */
+  --image-card-shadow-offset: 1.2vh; /* Shadow trails slightly below */
 }
 body {
   font-family: var(--app-font);
@@ -2558,7 +2560,7 @@ body:has(.countdown-screen:not(.transitioning)) .aurora-global {
 .image-card {
   position: relative;
   z-index: 1;
-  transform: translateY(-44px); /* move slightly higher */
+  transform: translateY(var(--image-card-y-nudge, -6vh)); /* Y nudge */
   overflow: visible; /* ensure bottom glows are never clipped */
 }
 .image-card::before,
@@ -3037,7 +3039,12 @@ body:has(.countdown-screen:not(.transitioning)) .aurora-global {
 .image-card-shadow {
   position: absolute;
   inset: 0;
-  transform: translateY(10px) scale(1.03);
+  transform: translateY(
+      calc(
+        var(--image-card-y-nudge, -6vh) + var(--image-card-shadow-offset, 1.2vh)
+      )
+    )
+    scale(1.03);
   filter: drop-shadow(0 18px 24px rgba(130, 104, 255, 0.25));
   z-index: 0;
   pointer-events: none;
